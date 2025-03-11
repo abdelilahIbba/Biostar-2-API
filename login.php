@@ -1,76 +1,65 @@
 <?php
-// session_start(); // Start the session
+session_start();
 
-// if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-//     $login_id = $_POST['login_id'] ?? '';
-//     $password = $_POST['password'] ?? '';
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $loginUrl = "https://localhost:5002/api/login";
+    $loginData = [
+        "User" => [
+            "login_id" => $_POST['username'],
+            "password" => $_POST['password']
+        ]
+    ];
 
-//     if (empty($login_id) || empty($password)) {
-//         die("Error: Missing login_id or password!");
-//     }
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $loginUrl);
+    curl_setopt($ch, CURLOPT_POST, true);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0);
+    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
+    curl_setopt($ch, CURLOPT_HEADER, true);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [
+        "Content-Type: application/json"
+    ]);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($loginData));
 
-//     // Create POST data
-//     $postData = json_encode([
-//         "User" => [
-//             "login_id" => $login_id,
-//             "password" => $password
-//         ]
-//     ]);
+    $response = curl_exec($ch);
+    $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
+    $header = substr($response, 0, $headerSize);
+    curl_close($ch);
 
-//     // Initialize cURL
-//     $ch = curl_init();
-//     curl_setopt($ch, CURLOPT_URL, "https://localhost:5002/api/login");
-//     curl_setopt($ch, CURLOPT_POST, true);
-//     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-//     curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 0); // For local development
-//     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0); // For local development
-//     curl_setopt($ch, CURLOPT_HTTPHEADER, [
-//         "Content-Type: application/json",
-//         "accept: application/json"
-//     ]);
-//     curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
-//     curl_setopt($ch, CURLOPT_HEADER, true); // Include headers in the output
-
-//     // Execute request
-//     $response = curl_exec($ch);
-
-//     if (curl_errno($ch)) {
-//         die("cURL error: " . curl_error($ch));
-//     }
-
-//     // Get the HTTP status code
-//     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
-//     // Separate headers and body
-//     $headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-//     $headers = substr($response, 0, $headerSize);
-//     $body = substr($response, $headerSize);
-
-//     curl_close($ch);
-
-//     // Check if the request was successful
-//     if ($httpCode === 200) {
-//         // Extract the bs-session-id from the headers
-//         preg_match('/bs-session-id: (.+)/i', $headers, $matches);
-//         if (isset($matches[1])) {
-//             $sessionID = trim($matches[1]);
-
-//             // Store the session ID in a session variable
-//             $_SESSION['bs_session_id'] = $sessionID;
-
-//             // Redirect to index.php with a success message
-//             header("Location: index.php?response=" . urlencode("Login successful! Session ID: " . $sessionID));
-//             exit();
-//         } else {
-//             die("Error: bs-session-id not found in headers!");
-//         }
-//     } else {
-//         // Redirect to index.php with an error message
-//         header("Location: index.php?response=" . urlencode("Login failed! Response: " . $body));
-//         exit();
-//     }
-// } else {
-//     die("Error: Only POST method is allowed!");
-// }
-
+    if (preg_match('/bs-session-id:\s*(\S+)/i', $header, $matches)) {
+        $_SESSION['bs_session_id'] = trim($matches[1]);
+        $redirect = $_GET['redirect'] ?? 'index.html';
+        header("Location: " . $redirect);
+        exit();
+    } else {
+        $error = "Login failed. Please try again.";
+    }
+}
 ?>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Biostar 2 Login</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        .login-form { max-width: 300px; margin: 0 auto; }
+        input { width: 100%; padding: 8px; margin: 8px 0; }
+        button { width: 100%; padding: 10px; background: #007bff; color: white; border: none; }
+        .error { color: red; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div class="login-form">
+        <h2>Biostar 2 Login</h2>
+        <?php if (isset($error)): ?>
+            <div class="error"><?php echo htmlspecialchars($error); ?></div>
+        <?php endif; ?>
+        <form method="POST">
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <button type="submit">Login</button>
+        </form>
+    </div>
+</body>
+</html>
