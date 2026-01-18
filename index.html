@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update User Status</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input, select {
+            margin-bottom: 10px;
+            padding: 5px;
+            width: 200px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <h1>Update User Status</h1>
+
+    <!-- Update User Status Form -->
+    <form id="updateForm" method="POST" action="update.php">
+        <label for="userID">User ID:</label>
+        <input type="text" id="userID" name="userID" required>
+        <br>
+        <label for="status">Status:</label>
+        <select id="status" name="status" required>
+            <option value="true">Disabled</option>
+            <option value="false">Enabled</option>
+        </select>
+        <br>
+        <button type="submit">Update Status</button>
+    </form>
+
+    <!-- Display API Response -->
+    <h2>API Response</h2>
+    <pre id="response">
+        <?php
+            if (isset($_GET['response'])) {
+                echo htmlspecialchars($_GET['response']);
+            }
+        ?>
+    </pre>
+</body>
+</html>
